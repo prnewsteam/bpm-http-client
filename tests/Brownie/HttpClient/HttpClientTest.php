@@ -1,6 +1,6 @@
 <?php
 
-use Brownie\HttpClient\HTTPClient;
+use Brownie\HttpClient\HttpClient;
 use Brownie\HttpClient\Request;
 use Prophecy\Prophecy\MethodProphecy;
 
