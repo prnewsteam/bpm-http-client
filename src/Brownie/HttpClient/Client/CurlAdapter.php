@@ -110,15 +110,11 @@ class CurlAdapter implements Client
      */
     private function getCurlClient(Request $request)
     {
-        $url = $request->getUrl();
 
         /**
-         * Adds GET parameters.
+         * Build URL.
          */
-        $params = $request->getParams();
-        if (!empty($params)) {
-            $url .= '?' . http_build_query($params);
-        }
+        $url = $this->getUrl($request);
 
         /**
          * Initializing CURL.
@@ -137,6 +133,47 @@ class CurlAdapter implements Client
         /**
          * CURL setting.
          */
+        $this->setBaseOpt($curl, $request, $url);
+
+        /**
+         * Configuring HTTP headers.
+         */
+        $this->setHedaers($curl, $request, $body);
+
+        return $curl;
+    }
+
+    /**
+     * Generates and returns URL.
+     *
+     * @param Request   $request    HTTP request params.
+     *
+     * @return string
+     */
+    private function getUrl(Request $request)
+    {
+        $url = $request->getUrl();
+
+        /**
+         * Adds GET parameters.
+         */
+        $params = $request->getParams();
+        if (!empty($params)) {
+            $url .= '?' . http_build_query($params);
+        }
+
+        return $url;
+    }
+
+    /**
+     * Sets the basic options.
+     *
+     * @param resource  $curl       CURL resource.
+     * @param Request   $request    HTTP request params.
+     * @param string    $url        Request URL.
+     */
+    private function setBaseOpt($curl, Request $request, $url)
+    {
         $this
             ->getAdaptee()
             ->setopt($curl, CURLOPT_CUSTOMREQUEST, $request->getMethod())
@@ -154,10 +191,17 @@ class CurlAdapter implements Client
                 ->setopt($curl, CURLOPT_SSL_VERIFYPEER, false)
                 ->setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
         }
+    }
 
-        /**
-         * Configuring HTTP headers.
-         */
+    /**
+     * Sets HTTP headers.
+     *
+     * @param resource  $curl       CURL resource.
+     * @param Request   $request    HTTP request params.
+     * @param string    $body       The body of the request.
+     */
+    private function setHedaers($curl, Request $request, $body)
+    {
         $headers = array(
             'Connection: close',
             'Accept-Ranges: bytes',
@@ -170,7 +214,5 @@ class CurlAdapter implements Client
             $headers[] = $name . ': ' . $value;
         }
         $this->getAdaptee()->setopt($curl, CURLOPT_HTTPHEADER, $headers);
-
-        return $curl;
     }
 }

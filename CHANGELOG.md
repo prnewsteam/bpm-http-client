@@ -11,3 +11,4 @@ Features:
 - Added unitTest for class Brownie\HttpClient\Exception\ValidateException.
 - Added unitTest for class Brownie\HttpClient\Request.
 - Added unitTest for class Brownie\HttpClient\Response.
+- Refactoring.
