@@ -11,6 +11,7 @@ use Brownie\HttpClient\Request;
 use Brownie\HttpClient\Response;
 use Brownie\HttpClient\Client;
 use Brownie\HttpClient\Exception\ClientException;
+use Brownie\HttpClient\Headers;
 
 /**
  * API(Adapter) for using CURL functions in HTTP requests.
@@ -92,13 +93,20 @@ class CurlAdapter implements Client
          */
         $runtime = $this->getAdaptee()->getinfo($curl, CURLINFO_TOTAL_TIME);
 
+        /**
+         * Gets the HTTP headers and the body separately.
+         */
+        $headerSize = $this->getAdaptee()->getinfo($curl, CURLINFO_HEADER_SIZE);
+        $body = substr($responseBody, $headerSize);
+
         $this->getAdaptee()->close($curl);
 
         $response = new Response();
         return $response
-            ->setBody($responseBody)
+            ->setBody($body)
             ->setHttpCode($httpCode)
-            ->setRuntime($runtime);
+            ->setRuntime($runtime)
+            ->setHttpHeaders(new Headers(substr($responseBody, 0, $headerSize)));
     }
 
     /**
@@ -127,7 +135,6 @@ class CurlAdapter implements Client
         $body = $request->getBody();
         if (!empty($body)) {
             $this->getAdaptee()->setopt($curl, CURLOPT_POSTFIELDS, $body);
-
         }
 
         /**
@@ -180,7 +187,8 @@ class CurlAdapter implements Client
             ->setopt($curl, CURLOPT_TIMEOUT, $request->getTimeOut())
             ->setopt($curl, CURLOPT_NOPROGRESS, true)
             ->setopt($curl, CURLOPT_RETURNTRANSFER, true)
-            ->setopt($curl, CURLOPT_URL, $url);
+            ->setopt($curl, CURLOPT_URL, $url)
+            ->setopt($curl, CURLOPT_HEADER, true);
 
         if ($request->isDisableSSLValidation()) {
             /**

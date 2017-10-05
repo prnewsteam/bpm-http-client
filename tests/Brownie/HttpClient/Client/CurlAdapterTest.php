@@ -32,6 +32,8 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Simple text', $response->getBody());
         $this->assertEquals(200, $response->getHttpCode());
         $this->assertEquals(5.5, $response->getRuntime());
+        $this->assertEquals('OK', $response->getHttpHeaders()->get('TestHeader'));
+        $this->assertEquals('ERR', $response->getHttpHeaders()->get('NoHeader', 'ERR'));
     }
 
     public function testHttpRequestOkNoCheckSSL()
@@ -45,6 +47,8 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Simple text', $response->getBody());
         $this->assertEquals(200, $response->getHttpCode());
         $this->assertEquals(5.5, $response->getRuntime());
+        $this->assertEquals('OK', $response->getHttpHeaders()->get('TestHeader'));
+        $this->assertEquals('ERR', $response->getHttpHeaders()->get('NoHeader', 'ERR'));
     }
 
     /**
@@ -58,12 +62,25 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
 
         $response = $this->curlAdapter->httpRequest($request);
 
-        $this->assertEquals('error', $response->getBody());
-        $this->assertEquals(400, $response->getHttpCode());
-        $this->assertEquals(1.5, $response->getRuntime());
+        $this->assertEquals('ERR', $response->getBody());
     }
 
-    private function createRequest($url, $disableSSLValidation = false)
+    public function testHttpRequestNoBody()
+    {
+        $this->curlAdapter = new CurlAdapter($this->createCurlAdaptee(0));
+
+        $request = $this->createRequest('http://localhost/endpoint', false, false);
+
+        $response = $this->curlAdapter->httpRequest($request);
+
+        $this->assertEquals('Simple text', $response->getBody());
+        $this->assertEquals(200, $response->getHttpCode());
+        $this->assertEquals(5.5, $response->getRuntime());
+        $this->assertEquals('OK', $response->getHttpHeaders()->get('TestHeader'));
+        $this->assertEquals('ERR', $response->getHttpHeaders()->get('NoHeader', 'ERR'));
+    }
+
+    private function createRequest($url, $disableSSLValidation = false, $addBody = true)
     {
         $request = $this
             ->prophesize('Brownie\HttpClient\Request');
@@ -134,7 +151,7 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
 
         $request
             ->addMethodProphecy(
-                $methodGetBody->willReturn('{"Hello":"World"}')
+                $methodGetBody->willReturn($addBody ? '{"Hello":"World"}' : null)
             );
 
         $request
@@ -219,6 +236,26 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
                 $methodSetopt_TIMEOUT->willReturn($curlAdaptee)
             );
 
+        $methodSetopt_HEADER = new MethodProphecy(
+            $curlAdaptee,
+            'setopt',
+            array(null, CURLOPT_HEADER, true)
+        );
+        $curlAdaptee
+            ->addMethodProphecy(
+                $methodSetopt_HEADER->willReturn($curlAdaptee)
+            );
+
+        $methodSetopt_HEADER_SIZE = new MethodProphecy(
+            $curlAdaptee,
+            'setopt',
+            array(null, CURLINFO_HEADER_SIZE, true)
+        );
+        $curlAdaptee
+            ->addMethodProphecy(
+                $methodSetopt_HEADER_SIZE->willReturn($curlAdaptee)
+            );
+
         $methodSetopt_NOPROGRESS = new MethodProphecy(
             $curlAdaptee,
             'setopt',
@@ -279,7 +316,7 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
                 $methodGetAgentString->willReturn('PHP Curl')
             );
 
-        $methodSetopt_HTTPHEADER = new MethodProphecy(
+        $methodSetopt_HTTPHEADER1 = new MethodProphecy(
             $curlAdaptee,
             'setopt',
             array(null, CURLOPT_HTTPHEADER, array(
@@ -294,7 +331,25 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
         );
         $curlAdaptee
             ->addMethodProphecy(
-                $methodSetopt_HTTPHEADER->willReturn($curlAdaptee)
+                $methodSetopt_HTTPHEADER1->willReturn($curlAdaptee)
+            );
+
+        $methodSetopt_HTTPHEADER2 = new MethodProphecy(
+            $curlAdaptee,
+            'setopt',
+            array(null, CURLOPT_HTTPHEADER, array(
+                "Connection: close",
+                "Accept-Ranges: bytes",
+                "Content-Length: 0",
+                "Accept: application/json",
+                "Content-Type: application/json; charset=utf-8",
+                "User-Agent: PHP Curl",
+                "test: Simple"
+            ))
+        );
+        $curlAdaptee
+            ->addMethodProphecy(
+                $methodSetopt_HTTPHEADER2->willReturn($curlAdaptee)
             );
 
         $methodExec = new MethodProphecy(
@@ -304,7 +359,7 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
         );
         $curlAdaptee
             ->addMethodProphecy(
-                $methodExec->willReturn('Simple text')
+                $methodExec->willReturn("HTTP/1.1 200 OK\r\nTestHeader: OK\r\n\r\nSimple text")
             );
 
         $methodGetinfo_HTTP_CODE = new MethodProphecy(
@@ -325,6 +380,16 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
         $curlAdaptee
             ->addMethodProphecy(
                 $methodGetinfo_TOTAL_TIME->willReturn(5.5)
+            );
+
+        $methodGetinfo_HEADER_SIZE = new MethodProphecy(
+            $curlAdaptee,
+            'getinfo',
+            array(null, CURLINFO_HEADER_SIZE)
+        );
+        $curlAdaptee
+            ->addMethodProphecy(
+                $methodGetinfo_HEADER_SIZE->willReturn(35)
             );
 
         $methodErrno = new MethodProphecy(
@@ -356,8 +421,6 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
             ->addMethodProphecy(
                 $methodClose->willReturn(null)
             );
-
-
 
         return $curlAdaptee->reveal();
     }

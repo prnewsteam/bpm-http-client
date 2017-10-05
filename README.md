@@ -39,6 +39,7 @@ $request
 $response = $httpClient->request($request);
 
 echo 'HTTP Code: ' . $response->getHttpCode() . PHP_EOL;
+echo 'Response header "Content-Type": ' . var_export($response->getHttpHeaders()->get('Content-Type'), true) . PHP_EOL;
 echo 'Request runtime: ' . $response->getRuntime() . PHP_EOL;
 echo 'Response body: ' . $response->getBody() . PHP_EOL;
 ```

@@ -35,6 +35,13 @@ class Response
     private $runtime;
 
     /**
+     * Headers.
+     *
+     * @var Headers
+     */
+    private $headeres;
+
+    /**
      * Sets response body.
      * Returns the current object.
      *
@@ -77,6 +84,20 @@ class Response
     }
 
     /**
+     * Sets the headers of the http response.
+     * Returns the current object.
+     *
+     * @param Headers     $headers    Headers.
+     *
+     * @return self
+     */
+    public function setHttpHeaders(Headers $headers)
+    {
+        $this->headeres = $headers;
+        return $this;
+    }
+
+    /**
      * Returns response body.
      *
      * @return string
@@ -104,5 +125,15 @@ class Response
     public function getRuntime()
     {
         return $this->runtime;
+    }
+
+    /**
+     * Returns the headers of the http response.
+     *
+     * @return Headers
+     */
+    public function getHttpHeaders()
+    {
+        return $this->headeres;
     }
 }
