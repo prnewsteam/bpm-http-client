@@ -16,9 +16,15 @@ class Request
 {
 
     /**
-     * Body data format.
+     * Body data formats.
      */
     const FORMAT_APPLICATION_JSON = 'application/json';
+
+    const FORMAT_APPLICATION_XML = 'application/xml';
+
+    const FORMAT_TEXT_HTML = 'text/html';
+
+    const FORMAT_TEXT_PLAIN = 'text/plain';
 
     /**
      * HTTP request method GET.
@@ -95,6 +101,13 @@ class Request
      * @var bool
      */
     private $disableSSLValidation = false;
+
+    /**
+     * Authentication data.
+     *
+     * @var string
+     */
+    private $authentication;
 
     /**
      * Sets HTTP request method.
@@ -299,5 +312,30 @@ class Request
         if (empty($url)) {
             throw new ValidateException('No required fields: url');
         }
+    }
+
+    /**
+     * Sets authentication data.
+     * Returns the current object.
+     *
+     * @param $login
+     * @param $password
+     *
+     * @return self
+     */
+    public function setAuthentication($login, $password)
+    {
+        $this->authentication = $login . ':' . $password;
+        return $this;
+    }
+
+    /**
+     * Returns authentication data.
+     *
+     * @return string
+     */
+    public function getAuthentication()
+    {
+        return $this->authentication;
     }
 }

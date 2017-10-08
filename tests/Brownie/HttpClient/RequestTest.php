@@ -93,4 +93,12 @@ class RequestTest extends PHPUnit_Framework_TestCase
         $this->request->disableSSLValidation();
         $this->assertTrue($this->request->isDisableSSLValidation());
     }
+
+    public function testAuthentication()
+    {
+        $login = 'tester';
+        $password = '123';
+        $this->request->setAuthentication($login, $password);
+        $this->assertEquals($login . ':' . $password, $this->request->getAuthentication());
+    }
 }

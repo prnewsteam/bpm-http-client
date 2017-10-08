@@ -80,6 +80,36 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('ERR', $response->getHttpHeaders()->get('NoHeader', 'ERR'));
     }
 
+    public function testHttpRequestOkCheckSSLAuthentication()
+    {
+        $this->curlAdapter = new CurlAdapter($this->createCurlAdaptee(0, true));
+
+        $request = $this->createRequest('http://localhost/endpoint');
+
+        $response = $this->curlAdapter->httpRequest($request);
+
+        $this->assertEquals('Simple text', $response->getBody());
+        $this->assertEquals(200, $response->getHttpCode());
+        $this->assertEquals(5.5, $response->getRuntime());
+        $this->assertEquals('OK', $response->getHttpHeaders()->get('TestHeader'));
+        $this->assertEquals('ERR', $response->getHttpHeaders()->get('NoHeader', 'ERR'));
+    }
+
+    public function testHttpRequestOkNoCheckSSLAuthentication()
+    {
+        $this->curlAdapter = new CurlAdapter($this->createCurlAdaptee(0, true));
+
+        $request = $this->createRequest('http://localhost/endpoint', true);
+
+        $response = $this->curlAdapter->httpRequest($request);
+
+        $this->assertEquals('Simple text', $response->getBody());
+        $this->assertEquals(200, $response->getHttpCode());
+        $this->assertEquals(5.5, $response->getRuntime());
+        $this->assertEquals('OK', $response->getHttpHeaders()->get('TestHeader'));
+        $this->assertEquals('ERR', $response->getHttpHeaders()->get('NoHeader', 'ERR'));
+    }
+
     private function createRequest($url, $disableSSLValidation = false, $addBody = true)
     {
         $request = $this
@@ -139,6 +169,12 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
             array()
         );
 
+        $methodGetAuthentication = new MethodProphecy(
+            $request,
+            'getAuthentication',
+            array()
+        );
+
         $request
             ->addMethodProphecy(
                 $methodGetMethod->willReturn('PUT')
@@ -188,10 +224,15 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
                 $methodIsDisableSSLValidation->willReturn($disableSSLValidation)
             );
 
+        $request
+            ->addMethodProphecy(
+                $methodGetAuthentication->willReturn('tester:123')
+            );
+
         return $request->reveal();
     }
 
-    private function createCurlAdaptee($curlErrno)
+    private function createCurlAdaptee($curlErrno, $authentication = false)
     {
         $curlAdaptee = $this
             ->prophesize('Brownie\HttpClient\Client\CurlAdaptee');
@@ -306,6 +347,26 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
                 $methodSetopt_SSL_VERIFYHOST->willReturn($curlAdaptee)
             );
 
+        $methodSetopt_HTTPAUTH = new MethodProphecy(
+            $curlAdaptee,
+            'setopt',
+            array(null, CURLOPT_HTTPAUTH, CURLAUTH_ANY)
+        );
+        $curlAdaptee
+            ->addMethodProphecy(
+                $methodSetopt_HTTPAUTH->willReturn($curlAdaptee)
+            );
+
+        $methodSetopt_USERPWD = new MethodProphecy(
+            $curlAdaptee,
+            'setopt',
+            array(null, CURLOPT_USERPWD, 'tester:123')
+        );
+        $curlAdaptee
+            ->addMethodProphecy(
+                $methodSetopt_USERPWD->willReturn($curlAdaptee)
+            );
+
         $methodGetAgentString = new MethodProphecy(
             $curlAdaptee,
             'getAgentString',
@@ -323,7 +384,7 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
                 "Connection: close",
                 "Accept-Ranges: bytes",
                 "Content-Length: 17",
-                "Accept: application/json",
+                "Accept: application/json,*/*",
                 "Content-Type: application/json; charset=utf-8",
                 "User-Agent: PHP Curl",
                 "test: Simple"
@@ -341,7 +402,7 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
                 "Connection: close",
                 "Accept-Ranges: bytes",
                 "Content-Length: 0",
-                "Accept: application/json",
+                "Accept: application/json,*/*",
                 "Content-Type: application/json; charset=utf-8",
                 "User-Agent: PHP Curl",
                 "test: Simple"
@@ -352,15 +413,41 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
                 $methodSetopt_HTTPHEADER2->willReturn($curlAdaptee)
             );
 
+        $methodSetopt_HTTPHEADER3 = new MethodProphecy(
+            $curlAdaptee,
+            'setopt',
+            array(null, CURLOPT_HTTPHEADER, array(
+                "Connection: close",
+                "Accept-Ranges: bytes",
+                "Content-Length: 0",
+                "Accept: application/json,*/*",
+                "Content-Type: application/json; charset=utf-8",
+                "User-Agent: PHP Curl",
+                "test: Simple"
+            ))
+        );
+        $curlAdaptee
+            ->addMethodProphecy(
+                $methodSetopt_HTTPHEADER3->willReturn($curlAdaptee)
+            );
+
         $methodExec = new MethodProphecy(
             $curlAdaptee,
             'exec',
             array(null)
         );
-        $curlAdaptee
-            ->addMethodProphecy(
-                $methodExec->willReturn("HTTP/1.1 200 OK\r\nTestHeader: OK\r\n\r\nSimple text")
-            );
+
+        if ($authentication) {
+            $curlAdaptee
+                ->addMethodProphecy(
+                    $methodExec->willReturn("HTTP/1.1 401 OK\r\nHeader401: OK\r\n\r\n\r\nHTTP/1.1 200 OK\r\nTestHeader: OK\r\n\r\nSimple text")
+                );
+        } else {
+            $curlAdaptee
+                ->addMethodProphecy(
+                    $methodExec->willReturn("HTTP/1.1 200 OK\r\nTestHeader: OK\r\n\r\nSimple text")
+                );
+        }
 
         $methodGetinfo_HTTP_CODE = new MethodProphecy(
             $curlAdaptee,
@@ -387,10 +474,18 @@ class CurlAdapterTest extends PHPUnit_Framework_TestCase
             'getinfo',
             array(null, CURLINFO_HEADER_SIZE)
         );
-        $curlAdaptee
-            ->addMethodProphecy(
-                $methodGetinfo_HEADER_SIZE->willReturn(35)
-            );
+
+        if ($authentication) {
+            $curlAdaptee
+                ->addMethodProphecy(
+                    $methodGetinfo_HEADER_SIZE->willReturn(71)
+                );
+        } else {
+            $curlAdaptee
+                ->addMethodProphecy(
+                    $methodGetinfo_HEADER_SIZE->willReturn(35)
+                );
+        }
 
         $methodErrno = new MethodProphecy(
             $curlAdaptee,

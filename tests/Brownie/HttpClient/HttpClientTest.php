@@ -142,6 +142,12 @@ class HttpClientTest extends PHPUnit_Framework_TestCase
             array()
         );
 
+        $methodGetAuthentication = new MethodProphecy(
+            $request,
+            'getAuthentication',
+            array()
+        );
+
         $request
             ->addMethodProphecy(
                 $methodGetMethod->willReturn('PUT')
@@ -182,6 +188,11 @@ class HttpClientTest extends PHPUnit_Framework_TestCase
         $request
             ->addMethodProphecy(
                 $methodValidate->willReturn(null)
+            );
+
+        $request
+            ->addMethodProphecy(
+                $methodGetAuthentication->willReturn('tester:123')
             );
 
         return $request->reveal();

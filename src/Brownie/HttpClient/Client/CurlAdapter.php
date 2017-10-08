@@ -190,6 +190,19 @@ class CurlAdapter implements Client
             ->setopt($curl, CURLOPT_URL, $url)
             ->setopt($curl, CURLOPT_HEADER, true);
 
+        $this->triggerDisableSSLCertificateValidation($curl, $request);
+
+        $this->triggerAuthentication($curl, $request);
+    }
+
+    /**
+     * Controlling verification of SSL certificates.
+     *
+     * @param resource  $curl           CURL resource.
+     * @param Request   $request        HTTP request params.
+     */
+    private function triggerDisableSSLCertificateValidation($curl, Request $request)
+    {
         if ($request->isDisableSSLValidation()) {
             /**
              * Disable SSL validation.
@@ -198,6 +211,26 @@ class CurlAdapter implements Client
                 ->getAdaptee()
                 ->setopt($curl, CURLOPT_SSL_VERIFYPEER, false)
                 ->setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        }
+    }
+
+    /**
+     * Controlling request authentication.
+     *
+     * @param resource  $curl           CURL resource.
+     * @param Request   $request        HTTP request params.
+     */
+    private function triggerAuthentication($curl, Request $request)
+    {
+        $authentication = $request->getAuthentication();
+        if (!empty($authentication)) {
+            /**
+             * Enable authentication.
+             */
+            $this
+                ->getAdaptee()
+                ->setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY)
+                ->setopt($curl, CURLOPT_USERPWD, $authentication);
         }
     }
 
@@ -214,7 +247,7 @@ class CurlAdapter implements Client
             'Connection: close',
             'Accept-Ranges: bytes',
             'Content-Length: ' . strlen($body),
-            'Accept: ' . $request->getBodyFormat(),
+            'Accept: ' . $request->getBodyFormat() . ',*/*',
             'Content-Type: ' . $request->getBodyFormat() . '; charset=utf-8',
             'User-Agent: ' . $this->getAdaptee()->getAgentString(),
         );

@@ -115,8 +115,12 @@ class Headers
     private function initHeaderList()
     {
         $headerList = array();
-        foreach (explode("\r\n", $this->toString()) as $index => $headerLine) {
-            if (0 == $index) {
+        foreach (explode("\r\n", $this->toString()) as $headerLine) {
+            if (empty($headerLine)) {
+                $headerList = array();
+                continue;
+            }
+            if ('HTTP/' == substr($headerLine, 0, 5)) {
                 continue;
             }
             list($key, $value) = explode(':', trim($headerLine), 2);
