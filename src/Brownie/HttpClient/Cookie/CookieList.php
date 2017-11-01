@@ -35,9 +35,7 @@ class CookieList extends StorageList
                 $param = trim($param);
                 $params = explode('=', $param, 2);
                 $name = trim($params[0]);
-                if (!empty($params[1])) {
-                    $value = trim($params[1]);
-                }
+		$value = (!empty($params[1]) ? trim($params[1]) : '');
                 if (0 == $index) {
                     $cookieParams['name'] = $name;
                     $cookieParams['value'] = $value;
