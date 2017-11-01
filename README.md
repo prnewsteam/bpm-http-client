@@ -7,7 +7,7 @@ HttpClient
 [![License](https://poser.pugx.org/ossbrownie/http-client/license)](https://packagist.org/packages/ossbrownie/http-client)
 
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/ossbrownie/http-client/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/ossbrownie/http-client/?branch=master)
-[![Coverage Status](https://coveralls.io/repos/github/ossbrownie/http-client/badge.svg?branch=master)](https://coveralls.io/github/ossbrownie/http-client?branch=master)
+[![Code Coverage](https://scrutinizer-ci.com/g/ossbrownie/http-client/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/ossbrownie/http-client/?branch=master)
 [![Build Status](https://travis-ci.org/ossbrownie/http-client.svg?branch=master)](https://travis-ci.org/ossbrownie/http-client)
 
 A simple HTTP client for sending HTTP requests and receiving responses.
@@ -18,6 +18,7 @@ A basic CURL wrapper for PHP (see [http://php.net/curl](http://php.net/curl) for
 ## Requirements
 - **PHP** >= 5.3
 - **EXT-CURL** = *
+- **"ossbrownie/util"** = ~0.0.1
 
 ## Usage
 ```php

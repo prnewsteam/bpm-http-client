@@ -7,11 +7,14 @@
 
 namespace Brownie\HttpClient\Client;
 
+use Brownie\HttpClient\Cookie\Cookie;
+use Brownie\HttpClient\Cookie\CookieList;
+use Brownie\HttpClient\Header\Header;
+use Brownie\HttpClient\Header\HeaderList;
 use Brownie\HttpClient\Request;
 use Brownie\HttpClient\Response;
 use Brownie\HttpClient\Client;
 use Brownie\HttpClient\Exception\ClientException;
-use Brownie\HttpClient\Headers;
 
 /**
  * API(Adapter) for using CURL functions in HTTP requests.
@@ -101,12 +104,15 @@ class CurlAdapter implements Client
 
         $this->getAdaptee()->close($curl);
 
+        $httpHeadersString = substr($responseBody, 0, $headerSize);
+
         $response = new Response();
         return $response
             ->setBody($body)
             ->setHttpCode($httpCode)
             ->setRuntime($runtime)
-            ->setHttpHeaders(new Headers(substr($responseBody, 0, $headerSize)));
+            ->setHttpHeaderList(new HeaderList($httpHeadersString))
+            ->setHttpCookieList(new CookieList($httpHeadersString));
     }
 
     /**
@@ -130,14 +136,6 @@ class CurlAdapter implements Client
         $curl = $this->getAdaptee()->init($url);
 
         /**
-         * Sets the request body.
-         */
-        $body = $request->getBody();
-        if (!empty($body)) {
-            $this->getAdaptee()->setopt($curl, CURLOPT_POSTFIELDS, $body);
-        }
-
-        /**
          * CURL setting.
          */
         $this->setBaseOpt($curl, $request, $url);
@@ -145,7 +143,7 @@ class CurlAdapter implements Client
         /**
          * Configuring HTTP headers.
          */
-        $this->setHedaers($curl, $request, $body);
+        $this->setHedaers($curl, $request);
 
         return $curl;
     }
@@ -165,7 +163,7 @@ class CurlAdapter implements Client
          * Adds GET parameters.
          */
         $params = $request->getParams();
-        if (!empty($params)) {
+        if ((Request::HTTP_METHOD_GET == $request->getMethod()) && !empty($params)) {
             $url .= '?' . http_build_query($params);
         }
 
@@ -190,9 +188,37 @@ class CurlAdapter implements Client
             ->setopt($curl, CURLOPT_URL, $url)
             ->setopt($curl, CURLOPT_HEADER, true);
 
+        if ($this->isPostParams($request)) {
+            $this
+                ->getAdaptee()
+                ->setopt($curl, CURLOPT_POST, true);
+            $params = $request->getParams();
+            if (!empty($params)) {
+                $params = http_build_query($params);
+                $request->setBody($params);
+            }
+        }
+
+        $this
+            ->getAdaptee()
+            ->setopt($curl, CURLOPT_POSTFIELDS, $request->getBody());
+
         $this->triggerDisableSSLCertificateValidation($curl, $request);
 
         $this->triggerAuthentication($curl, $request);
+    }
+
+    /**
+     * Returns the POST character of the data.
+     *
+     * @param Request   $request    HTTP request params.
+     *
+     * @return bool
+     */
+    private function isPostParams(Request $request)
+    {
+        return (Request::HTTP_METHOD_POST == $request->getMethod()) ||
+            (Request::HTTP_METHOD_PUT == $request->getMethod());
     }
 
     /**
@@ -237,22 +263,38 @@ class CurlAdapter implements Client
     /**
      * Sets HTTP headers.
      *
-     * @param resource  $curl       CURL resource.
-     * @param Request   $request    HTTP request params.
-     * @param string    $body       The body of the request.
+     * @param resource  $curl                   CURL resource.
+     * @param Request   $request                HTTP request params.
      */
-    private function setHedaers($curl, Request $request, $body)
+    private function setHedaers($curl, Request $request)
     {
         $headers = array(
             'Connection: close',
             'Accept-Ranges: bytes',
-            'Content-Length: ' . strlen($body),
+            'Content-Length: ' . strlen($request->getBody()),
             'Accept: ' . $request->getBodyFormat() . ',*/*',
-            'Content-Type: ' . $request->getBodyFormat() . '; charset=utf-8',
             'User-Agent: ' . $this->getAdaptee()->getAgentString(),
         );
-        foreach ($request->getHeaders() as $name => $value) {
-            $headers[] = $name . ': ' . $value;
+
+        if (!$this->isPostParams($request)) {
+            $headers[] = 'Content-Type: ' . $request->getBodyFormat() . '; charset=utf-8';
+        }
+
+        /**
+         * @var Header  $header     Header.
+         */
+        foreach ($request->getHeaders() as $header) {
+            $headers[] = $header->toString();
+        }
+        /**
+         * @var Cookie  $cookie     Cookie.
+         */
+        $cookies = array();
+        foreach ($request->getCookies() as $cookie) {
+            $cookies[] = $cookie->toString();
+        }
+        if (!empty($cookies)) {
+            $headers[] = 'Cookie: ' . implode('; ', $cookies);
         }
         $this->getAdaptee()->setopt($curl, CURLOPT_HTTPHEADER, $headers);
     }

@@ -1,10 +1,12 @@
 <?php
 
+namespace Test\Brownie\HttpClient;
+
 use Brownie\HttpClient\HttpClient;
 use Brownie\HttpClient\Request;
 use Prophecy\Prophecy\MethodProphecy;
 
-class HttpClientTest extends PHPUnit_Framework_TestCase
+class HttpClientTest extends \PHPUnit_Framework_TestCase
 {
 
     /**

@@ -1,5 +1,16 @@
 # Change Log
 
+## dev-master (2017-11-01)
+- Added support for working with HTTP cookie.
+- Renamed the Headers class in HeaderList.
+- Added unitTest for class Brownie\HttpClient\Header\Header.
+- Added unitTest for class Brownie\HttpClient\Header\HeaderList.
+- Added unitTest for class Brownie\HttpClient\Cookie\Cookie.
+- Added unitTest for class Brownie\HttpClient\Cookie\CookieList.
+- Added phpunit.xml.dist file.
+- Change unitTest.
+- Refactoring.
+
 ## dev-master (2017-10-08)
 - Added support for HTTP authentication in the request.
 - Change unitTest.

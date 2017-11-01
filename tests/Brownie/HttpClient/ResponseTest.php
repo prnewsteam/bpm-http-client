@@ -1,8 +1,11 @@
 <?php
 
-use Brownie\HttpClient\Response;
+namespace Test\Brownie\HttpClient;
 
-class ResponseTest extends PHPUnit_Framework_TestCase
+use Brownie\HttpClient\Response;
+use Prophecy\Prophecy\MethodProphecy;
+
+class ResponseTest extends \PHPUnit_Framework_TestCase
 {
 
     /**
@@ -39,5 +42,49 @@ class ResponseTest extends PHPUnit_Framework_TestCase
         $runtime = 2.2;
         $this->response->setRuntime($runtime);
         $this->assertEquals($runtime, $this->response->getRuntime());
+    }
+
+    public function testGetHttpHeaderList()
+    {
+        $headerList = $this->prophesize('Brownie\HttpClient\Header\HeaderList');
+        $methodToArray = new MethodProphecy(
+            $headerList,
+            'toArray',
+            array()
+        );
+
+        $toArray = array('test' => 'ok');
+
+        $headerList
+            ->addMethodProphecy(
+                $methodToArray->willReturn($toArray)
+            );
+
+        $this->response->setHttpHeaderList($headerList->reveal());
+        $headers = $this->response->getHttpHeaderList();
+
+        $this->assertEquals($toArray, $headers->toArray());
+    }
+
+    public function testGetHttpCookieList()
+    {
+        $cookieList = $this->prophesize('Brownie\HttpClient\Cookie\CookieList');
+        $methodToArray = new MethodProphecy(
+            $cookieList,
+            'toArray',
+            array()
+        );
+
+        $toArray = array('test' => 'ok');
+
+        $cookieList
+            ->addMethodProphecy(
+                $methodToArray->willReturn($toArray)
+            );
+
+        $this->response->setHttpCookieList($cookieList->reveal());
+        $cookies = $this->response->getHttpCookieList();
+
+        $this->assertEquals($toArray, $cookies->toArray());
     }
 }

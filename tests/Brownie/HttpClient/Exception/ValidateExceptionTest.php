@@ -1,8 +1,10 @@
 <?php
 
+namespace Test\Brownie\HttpClient\Exception;
+
 use Brownie\HttpClient\Exception\ValidateException;
 
-class ValidateExceptionTest extends PHPUnit_Framework_TestCase
+class ValidateExceptionTest extends \PHPUnit_Framework_TestCase
 {
 
     /**

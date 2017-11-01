@@ -1,8 +1,10 @@
 <?php
 
+namespace Test\Brownie\HttpClient\Client;
+
 use Brownie\HttpClient\Client\CurlAdaptee;
 
-class CurlAdapteeTest extends PHPUnit_Framework_TestCase
+class CurlAdapteeTest extends \PHPUnit_Framework_TestCase
 {
 
     /**

@@ -1,8 +1,11 @@
 <?php
 
-use Brownie\HttpClient\Request;
+namespace Test\Brownie\HttpClient;
 
-class RequestTest extends PHPUnit_Framework_TestCase
+use Brownie\HttpClient\Request;
+use Prophecy\Prophecy\MethodProphecy;
+
+class RequestTest extends \PHPUnit_Framework_TestCase
 {
 
     /**
@@ -64,9 +67,40 @@ class RequestTest extends PHPUnit_Framework_TestCase
 
     public function testHeader()
     {
-        $this->request->addHeader('Test', 'Simple');
+        $header1 = $this->prophesize('Brownie\HttpClient\Header\Header');
+        $methodHeader1ToString = new MethodProphecy(
+            $header1,
+            'toString',
+            array()
+        );
+        $methodHeader1GetName = new MethodProphecy(
+            $header1,
+            'getName',
+            array()
+        );
+        $methodHeader1GetValue = new MethodProphecy(
+            $header1,
+            'getValue',
+            array()
+        );
+        $header1
+            ->addMethodProphecy(
+                $methodHeader1ToString->willReturn('test: Simple')
+            );
+        $header1
+            ->addMethodProphecy(
+                $methodHeader1GetName->willReturn('test')
+            );
+        $header1
+            ->addMethodProphecy(
+                $methodHeader1GetValue->willReturn('Simple')
+            );
+
+        $header1 = $header1->reveal();
+
+        $this->request->addHeader($header1);
         $this->assertEquals(array(
-            'Test' => 'Simple'
+            'test' => $header1
         ), $this->request->getHeaders());
     }
 
@@ -100,5 +134,55 @@ class RequestTest extends PHPUnit_Framework_TestCase
         $password = '123';
         $this->request->setAuthentication($login, $password);
         $this->assertEquals($login . ':' . $password, $this->request->getAuthentication());
+    }
+
+    public function testAddCookie()
+    {
+        $cookie1 = $this->prophesize('Brownie\HttpClient\Cookie\Cookie');
+        $methodCookie1ToString = new MethodProphecy(
+            $cookie1,
+            'toString',
+            array()
+        );
+        $methodCookie1GetName = new MethodProphecy(
+            $cookie1,
+            'getName',
+            array()
+        );
+        $methodCookie1GetValue = new MethodProphecy(
+            $cookie1,
+            'getValue',
+            array()
+        );
+
+        $name = 'cookieTest';
+        $value = 'cookieSimple';
+
+        $cookie1
+            ->addMethodProphecy(
+                $methodCookie1ToString->willReturn($name . '=' . $value)
+            );
+        $cookie1
+            ->addMethodProphecy(
+                $methodCookie1GetName->willReturn($name)
+            );
+        $cookie1
+            ->addMethodProphecy(
+                $methodCookie1GetValue->willReturn($value)
+            );
+
+        $cookie1 = $cookie1->reveal();
+
+        $this
+            ->request
+            ->addCookie($cookie1);
+
+        $cookies = $this
+            ->request
+            ->getCookies();
+
+        $this->assertEquals($name, $cookies['cookieTest']->getName());
+        $this->assertEquals($value, $cookies['cookieTest']->getValue());
+        $this->assertEquals($name . '=' . $value, $cookies['cookieTest']->toString());
     }
 }

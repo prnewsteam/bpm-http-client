@@ -1,8 +1,10 @@
 <?php
 
+namespace Test\Brownie\HttpClient\Exception;
+
 use Brownie\HttpClient\Exception\ClientException;
 
-class ClientExceptionTest extends PHPUnit_Framework_TestCase
+class ClientExceptionTest extends \PHPUnit_Framework_TestCase
 {
 
     /**

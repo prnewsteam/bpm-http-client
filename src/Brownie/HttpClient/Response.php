@@ -7,133 +7,32 @@
 
 namespace Brownie\HttpClient;
 
+use Brownie\HttpClient\Cookie\CookieList;
+use Brownie\HttpClient\Header\HeaderList;
+use Brownie\Util\StorageArray;
+
 /**
  * HTTP client response.
+ *
+ * @method Response     setBody(string $responseBody)               Sets response body.
+ * @method string       getBody()                                   Returns response body.
+ * @method Response     setHttpCode(int $httpCode)                  Sets HTTP response code.
+ * @method int          getHttpCode()                               Returns HTTP response code.
+ * @method Response     setRuntime(float $runtime)                  Sets request execution time.
+ * @method float        getRuntime()                                Returns request execution time.
+ * @method Response     setHttpHeaderList(HeaderList $headerList)   Sets the headers of the http response.
+ * @method HeaderList   getHttpHeaderList()                         Returns the headers of the http response.
+ * @method Response     setHttpCookieList(CookieList $cookieList)   Sets the cookies of the http response.
+ * @method CookieList   getHttpCookieList()                         Returns the cookies of the http response.
  */
-class Response
+class Response extends StorageArray
 {
 
-    /**
-     * Response body.
-     *
-     * @var string
-     */
-    private $responseBody;
-
-    /**
-     * HTTP response code.
-     *
-     * @var int
-     */
-    private $httpCode;
-
-    /**
-     * Request execution time.
-     *
-     * @var float
-     */
-    private $runtime;
-
-    /**
-     * Headers.
-     *
-     * @var Headers
-     */
-    private $headeres;
-
-    /**
-     * Sets response body.
-     * Returns the current object.
-     *
-     * @param string    $responseBody   Response body.
-     *
-     * @return self
-     */
-    public function setBody($responseBody)
-    {
-        $this->responseBody = $responseBody;
-        return $this;
-    }
-
-    /**
-     * Sets HTTP response code.
-     * Returns the current object.
-     *
-     * @param int   $httpCode   HTTP response code.
-     *
-     * @return self
-     */
-    public function setHttpCode($httpCode)
-    {
-        $this->httpCode = $httpCode;
-        return $this;
-    }
-
-    /**
-     * Sets request execution time.
-     * Returns the current object.
-     *
-     * @param float     $runtime        Request execution time.
-     *
-     * @return self
-     */
-    public function setRuntime($runtime)
-    {
-        $this->runtime = $runtime;
-        return $this;
-    }
-
-    /**
-     * Sets the headers of the http response.
-     * Returns the current object.
-     *
-     * @param Headers     $headers    Headers.
-     *
-     * @return self
-     */
-    public function setHttpHeaders(Headers $headers)
-    {
-        $this->headeres = $headers;
-        return $this;
-    }
-
-    /**
-     * Returns response body.
-     *
-     * @return string
-     */
-    public function getBody()
-    {
-        return $this->responseBody;
-    }
-
-    /**
-     * Returns HTTP response code.
-     *
-     * @return int
-     */
-    public function getHttpCode()
-    {
-        return $this->httpCode;
-    }
-
-    /**
-     * Returns request execution time.
-     *
-     * @return float
-     */
-    public function getRuntime()
-    {
-        return $this->runtime;
-    }
-
-    /**
-     * Returns the headers of the http response.
-     *
-     * @return Headers
-     */
-    public function getHttpHeaders()
-    {
-        return $this->headeres;
-    }
+    protected $fields = array(
+        'body' => null,             // Response body.
+        'httpCode' => null,         // HTTP response code.
+        'runtime' => null,          // Request execution time.
+        'httpHeaderList' => null,   // Header list.
+        'httpCookieList' => null,   // Cookie list.
+    );
 }

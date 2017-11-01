@@ -8,11 +8,25 @@
 namespace Brownie\HttpClient;
 
 use Brownie\HttpClient\Exception\ValidateException;
+use Brownie\HttpClient\Header\Header;
+use Brownie\HttpClient\Cookie\Cookie;
+use Brownie\Util\StorageArray;
 
 /**
  * HTTP client request.
+ *
+ * @method Request          setMethod(string $method)           Sets HTTP request method.
+ * @method string           getMethod()                         Returns HTTP request method.
+ * @method Request          setUrl(string $url)                 Sets URL request.
+ * @method null|string      getUrl()                            Returns URL request.
+ * @method Request          setBody(string $body)               Sets request body.
+ * @method null|string      getBody()                           Returns request body.
+ * @method Request          setBodyFormat(string $bodyFormat)   Sets the body data format.
+ * @method string           getBodyFormat()                     Returns body data format.
+ * @method Request          setTimeOut(int $timeOut)            Sets the execution time of the request.
+ * @method string           getTimeOut()                        Returns the maximum time to execute the query.
  */
-class Request
+class Request extends StorageArray
 {
 
     /**
@@ -25,6 +39,8 @@ class Request
     const FORMAT_TEXT_HTML = 'text/html';
 
     const FORMAT_TEXT_PLAIN = 'text/plain';
+
+    const FORMAT_FORM_URLENCODED = 'application/x-www-form-urlencoded';
 
     /**
      * HTTP request method GET.
@@ -47,39 +63,17 @@ class Request
     const HTTP_METHOD_DELETE = 'DELETE';
 
     /**
-     * HTTP request method.
-     *
-     * @var string
+     * HTTP request method HEADER.
      */
-    private $method = self::HTTP_METHOD_GET;
+    const HTTP_METHOD_HEADER = 'HEADER';
 
-    /**
-     * URL request.
-     *
-     * @var null|string
-     */
-    private $url = null;
-
-    /**
-     * Request body.
-     *
-     * @var null|string
-     */
-    private $body = null;
-
-    /**
-     * Body data format.
-     *
-     * @var string
-     */
-    private $bodyFormat = self::FORMAT_APPLICATION_JSON;
-
-    /**
-     * The maximum number of seconds allowed to execute a query.
-     *
-     * @var int
-     */
-    private $timeOut = 60;
+    protected $fields = array(
+        'method' => self::HTTP_METHOD_GET,              // HTTP request method.
+        'url' => null,                                  // URL request.
+        'body' => null,                                 // Request body.
+        'bodyFormat' => self::FORMAT_FORM_URLENCODED,   // Body data format.
+        'timeOut' => 60,                                // The maximum number of seconds allowed to execute a query.
+    );
 
     /**
      * An array of HTTP header fields to set.
@@ -87,6 +81,13 @@ class Request
      * @var array
      */
     private $headers = array();
+
+    /**
+     * An array of HTTP cookie fields to set.
+     *
+     * @var array
+     */
+    private $cookies = array();
 
     /**
      * An array of GET params to set.
@@ -110,48 +111,6 @@ class Request
     private $authentication;
 
     /**
-     * Sets HTTP request method.
-     * Returns the current object.
-     *
-     * @param $method
-     *
-     * @return self
-     */
-    public function setMethod($method)
-    {
-        $this->method = $method;
-        return $this;
-    }
-
-    /**
-     * Sets URL request.
-     * Returns the current object.
-     *
-     * @param string    $url    URL request.
-     *
-     * @return self
-     */
-    public function setUrl($url)
-    {
-        $this->url = $url;
-        return $this;
-    }
-
-    /**
-     * Sets request body.
-     * Returns the current object.
-     *
-     * @param string    $body   Request body.
-     *
-     * @return self
-     */
-    public function setBody($body)
-    {
-        $this->body = $body;
-        return $this;
-    }
-
-    /**
      * Adds GET param.
      * Returns the current object.
      *
@@ -167,76 +126,31 @@ class Request
     }
 
     /**
-     * Sets the body data format.
-     * Returns the current object.
-     *
-     * @param string    $bodyFormat     Body data format.
-     *
-     * @return self
-     */
-    public function setBodyFormat($bodyFormat)
-    {
-        $this->bodyFormat = $bodyFormat;
-        return $this;
-    }
-
-    /**
-     * Sets the execution time of the request.
-     * Returns the current object.
-     *
-     * @param int   $timeOut    Time in seconds.
-     *
-     * @return self
-     */
-    public function setTimeOut($timeOut)
-    {
-        $this->timeOut = $timeOut;
-        return $this;
-    }
-
-    /**
      * Adds header.
      * Returns the current object.
      *
-     * @param string    $name       Header parameter name.
-     * @param string    $value      Header parameter value.
+     * @param Header    $header     Header.
      *
      * @return self
      */
-    public function addHeader($name, $value)
+    public function addHeader(Header $header)
     {
-        $this->headers[$name] = $value;
+        $this->headers[$header->getName()] = $header;
         return $this;
     }
 
     /**
-     * Returns HTTP request method.
+     * Adds cookie.
+     * Returns the current object.
      *
-     * @return string
-     */
-    public function getMethod()
-    {
-        return $this->method;
-    }
-
-    /**
-     * Returns URL request.
+     * @param Cookie    $cookie     Cookie.
      *
-     * @return null|string
+     * @return self
      */
-    public function getUrl()
+    public function addCookie(Cookie $cookie)
     {
-        return $this->url;
-    }
-
-    /**
-     * Returns request body.
-     *
-     * @return null|string
-     */
-    public function getBody()
-    {
-        return $this->body;
+        $this->cookies[$cookie->getName()] = $cookie;
+        return $this;
     }
 
     /**
@@ -250,26 +164,6 @@ class Request
     }
 
     /**
-     * Returns body data format.
-     *
-     * @return string
-     */
-    public function getBodyFormat()
-    {
-        return $this->bodyFormat;
-    }
-
-    /**
-     * Returns the maximum time to execute the query.
-     *
-     * @return int
-     */
-    public function getTimeOut()
-    {
-        return $this->timeOut;
-    }
-
-    /**
      * Returns headers.
      *
      * @return array
@@ -277,6 +171,16 @@ class Request
     public function getHeaders()
     {
         return $this->headers;
+    }
+
+    /**
+     * Returns cookies.
+     *
+     * @return array
+     */
+    public function getCookies()
+    {
+        return $this->cookies;
     }
 
     /**
