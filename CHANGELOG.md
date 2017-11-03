@@ -1,5 +1,8 @@
 # Change Log
 
+## dev-master (2017-11-03)
+- Refactoring.
+
 ## dev-master (2017-11-01)
 - Added support for working with HTTP cookie.
 - Renamed the Headers class in HeaderList.

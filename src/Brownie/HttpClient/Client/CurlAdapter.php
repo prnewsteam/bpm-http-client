@@ -82,8 +82,6 @@ class CurlAdapter implements Client
          */
         $responseBody = $this->getAdaptee()->exec($curl);
 
-        $httpCode = $this->getAdaptee()->getinfo($curl, CURLINFO_HTTP_CODE);
-
         /**
          * Network error checking.
          */
@@ -91,19 +89,16 @@ class CurlAdapter implements Client
             throw new ClientException($this->getAdaptee()->error($curl));
         }
 
-        /**
-         * Gets the execution time of the request.
-         */
         $runtime = $this->getAdaptee()->getinfo($curl, CURLINFO_TOTAL_TIME);
+        $httpCode = $this->getAdaptee()->getinfo($curl, CURLINFO_HTTP_CODE);
+        $headerSize = $this->getAdaptee()->getinfo($curl, CURLINFO_HEADER_SIZE);
+
+        $this->getAdaptee()->close($curl);
 
         /**
          * Gets the HTTP headers and the body separately.
          */
-        $headerSize = $this->getAdaptee()->getinfo($curl, CURLINFO_HEADER_SIZE);
         $body = substr($responseBody, $headerSize);
-
-        $this->getAdaptee()->close($curl);
-
         $httpHeadersString = substr($responseBody, 0, $headerSize);
 
         $response = new Response();
@@ -263,39 +258,83 @@ class CurlAdapter implements Client
     /**
      * Sets HTTP headers.
      *
-     * @param resource  $curl                   CURL resource.
-     * @param Request   $request                HTTP request params.
+     * @param resource  $curl       CURL resource.
+     * @param Request   $request    HTTP request params.
      */
     private function setHedaers($curl, Request $request)
     {
-        $headers = array(
+        /**
+         * Sets the basic set of HTTP headers.
+         */
+        $headers = $this->createBaseHeaderList($request);
+        if (!$this->isPostParams($request)) {
+            $headers[] = 'Content-Type: ' . $request->getBodyFormat() . '; charset=utf-8';
+        }
+
+        /**
+         * Sets a custom set of HTTP headers.
+         */
+        $headers = array_merge($headers, $this->createCustomHeaderList($request));
+
+        /**
+         * Sets the HTTP cookie.
+         */
+        $headers = array_merge($headers, $this->createCookieHeaderList($request));
+
+        $this->getAdaptee()->setopt($curl, CURLOPT_HTTPHEADER, $headers);
+    }
+
+    /**
+     * Returns the basic set of HTTP headers.
+     *
+     * @param Request   $request    HTTP request params.
+     *
+     * @return array
+     */
+    private function createBaseHeaderList(Request $request)
+    {
+        return array(
             'Connection: close',
             'Accept-Ranges: bytes',
             'Content-Length: ' . strlen($request->getBody()),
             'Accept: ' . $request->getBodyFormat() . ',*/*',
             'User-Agent: ' . $this->getAdaptee()->getAgentString(),
         );
+    }
 
-        if (!$this->isPostParams($request)) {
-            $headers[] = 'Content-Type: ' . $request->getBodyFormat() . '; charset=utf-8';
-        }
-
-        /**
-         * @var Header  $header     Header.
-         */
+    /**
+     * Returns a custom set of HTTP headers.
+     *
+     * @param Request   $request    HTTP request params.
+     *
+     * @return array
+     */
+    private function createCustomHeaderList(Request $request)
+    {
+        $headers = array();
         foreach ($request->getHeaders() as $header) {
             $headers[] = $header->toString();
         }
-        /**
-         * @var Cookie  $cookie     Cookie.
-         */
+        return $headers;
+    }
+
+    /**
+     * Returns the HTTP cookies for the HTTP header.
+     *
+     * @param Request   $request    HTTP request params.
+     *
+     * @return array
+     */
+    private function createCookieHeaderList(Request $request)
+    {
         $cookies = array();
         foreach ($request->getCookies() as $cookie) {
             $cookies[] = $cookie->toString();
         }
+        $headers = array();
         if (!empty($cookies)) {
             $headers[] = 'Cookie: ' . implode('; ', $cookies);
         }
-        $this->getAdaptee()->setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        return $headers;
     }
 }

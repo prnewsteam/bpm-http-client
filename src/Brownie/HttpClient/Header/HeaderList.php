@@ -7,12 +7,12 @@
 
 namespace Brownie\HttpClient\Header;
 
-use Brownie\Util\StorageList;
+use Brownie\HttpClient\HeadList;
 
 /**
  * HTTP headers collection.
  */
-class HeaderList extends StorageList
+class HeaderList extends HeadList
 {
 
     /**
@@ -26,19 +26,30 @@ class HeaderList extends StorageList
                 $headerList = array();
                 continue;
             }
-            if (
-                ('HTTP/' == substr($headerLine, 0, 5)) ||
-                ('Set-Cookie:' == substr($headerLine, 0, 11))
-            ) {
+            if ($this->isHeaderHTTP($headerLine) || $this->isHeaderSetCookie($headerLine)) {
                 continue;
             }
-            $headerParams = explode(':', trim($headerLine), 2);
-            $key = trim($headerParams[0]);
-            $headerList[strtolower($key)] = new Header(array(
-                'name' => $key,
-                'value' => trim($headerParams[1])
-            ));
+            $headerParams = $this->getHeaderParams($headerLine);
+            $headerList[strtolower($headerParams['name'])] = new Header($headerParams);
         }
         $this->setList($headerList);
+    }
+
+    /**
+     * Splits Cookie HTTP header on the parameters.
+     *
+     * @param string    $headerLine     HTTP header line.
+     *
+     * @return array
+     */
+    private function getHeaderParams($headerLine)
+    {
+        $pairParam = explode(':', trim($headerLine), 2);
+        $name = trim($pairParam[0]);
+        $value = trim($pairParam[1]);
+        return array(
+            'name' => $name,
+            'value' => $value
+        );
     }
 }

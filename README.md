@@ -26,6 +26,16 @@ $httpClient = new HttpClient(
     new CurlAdapter(new CurlAdaptee())
 );
 
+$header = new Header();
+$header
+    ->setName('test1')
+    ->setValue('Simple1');
+
+$cookie = new Cookie();
+$cookie
+    ->setName('cookieName1')
+    ->setValue('cookieValue1');
+
 $request = new Request();
 $request
     ->setMethod(Request::HTTP_METHOD_GET)
@@ -36,14 +46,29 @@ $request
     ->setTimeOut(100)
     ->disableSSLValidation()
     ->setAuthentication('tester', '123')
-    ->addHeader('test', 'Simple');
+    ->addHeader(new Header(array(
+        'name' => 'test2',
+        'value' => 'Simple2'
+    )))
+    ->addHeader($header)
+    ->addCookie(new Cookie(array(
+        'name' => 'cookieName2',
+        'value' => 'cookieValue2',
+    )))
+    ->addCookie($cookie);
 
 $response = $httpClient->request($request);
 
 echo 'HTTP Code: ' . $response->getHttpCode() . PHP_EOL;
 echo 'Response header "Content-Type": ' .
     var_export(
-        $response->getHttpHeaders()->get('Content-Type'),
+        $response->getHttpHeaderList()->get('Content-Type')->getValue(),
+        true
+    ) .
+    PHP_EOL;
+echo 'Response cookie "test3": ' .
+    var_export(
+        $response->getHttpCookieList()->get('test3')->getValue(),
         true
     ) .
     PHP_EOL;

@@ -7,9 +7,9 @@
 
 namespace Brownie\HttpClient\Cookie;
 
-use Brownie\Util\StorageList;
+use Brownie\HttpClient\HeadList;
 
-class CookieList extends StorageList
+class CookieList extends HeadList
 {
 
     /**
@@ -18,44 +18,42 @@ class CookieList extends StorageList
     protected function initList()
     {
         $cookieList = array();
-
         foreach (explode("\r\n", trim($this->getInitData())) as $headerLine) {
             if (empty($headerLine)) {
                 $cookieList = array();
                 continue;
             }
-            if ('Set-Cookie:' != substr($headerLine, 0, 11)) {
+            if (!$this->isHeaderSetCookie($headerLine)) {
                 continue;
             }
-            $cookieParams = explode(':', trim($headerLine), 2);
-            $params = $cookieParams[1];
-
-            $cookieParams = array();
-            foreach (explode(';', trim($params)) as $index => $param) {
-                $param = trim($param);
-                $params = explode('=', $param, 2);
-                $name = trim($params[0]);
-		$value = (!empty($params[1]) ? trim($params[1]) : '');
-                if (0 == $index) {
-                    $cookieParams['name'] = $name;
-                    $cookieParams['value'] = $value;
-                    continue;
-                }
-                switch ($name) {
-                    case 'expires':
-                    case 'path':
-                    case 'domain':
-                        $cookieParams[$name] = $value;
-                        break;
-                    case 'secure':
-                    case 'httponly':
-                        $cookieParams[$name] = true;
-                        break;
-                }
-            }
+            $cookieParams = $this->getCookieParams($headerLine);
             $cookieList[$cookieParams['name']] = new Cookie($cookieParams);
         }
-
         $this->setList($cookieList);
+    }
+
+    /**
+     * Splits HTTP header on the parameters.
+     *
+     * @param string    $headerLine     HTTP header line Set-Cookie.
+     *
+     * @return array
+     */
+    private function getCookieParams($headerLine)
+    {
+        $cookieParamsStrings = explode(':', trim($headerLine), 2);
+        $params = array();
+        foreach (explode(';', trim($cookieParamsStrings[1])) as $index => $paramString) {
+            $pairParam = explode('=', trim($paramString), 2);
+            $name = trim($pairParam[0]);
+            $value = (!empty($pairParam[1]) ? trim($pairParam[1]) : true);
+            if (0 == $index) {
+                $params['name'] = $name;
+                $params['value'] = $value;
+                continue;
+            }
+            $params[$name] = $value;
+        }
+        return $params;
     }
 }
