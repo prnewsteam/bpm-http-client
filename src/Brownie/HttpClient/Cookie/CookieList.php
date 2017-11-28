@@ -9,37 +9,44 @@ namespace Brownie\HttpClient\Cookie;
 
 use Brownie\HttpClient\HeadList;
 
+/**
+ * HTTP cookie collection.
+ */
 class CookieList extends HeadList
 {
 
     /**
-     * Initializing the cookies container.
+     * Returns the HTTP header skip flag.
+     *
+     * @param string    $headerLine     HTTP header line.
+     *
+     * @return bool
      */
-    protected function initList()
+    protected function isSkipHeaderLine($headerLine)
     {
-        $cookieList = array();
-        foreach (explode("\r\n", trim($this->getInitData())) as $headerLine) {
-            if (empty($headerLine)) {
-                $cookieList = array();
-                continue;
-            }
-            if (!$this->isHeaderSetCookie($headerLine)) {
-                continue;
-            }
-            $cookieParams = $this->getCookieParams($headerLine);
-            $cookieList[$cookieParams['name']] = new Cookie($cookieParams);
-        }
-        $this->setList($cookieList);
+        return !$this->isHeaderSetCookie($headerLine);
     }
 
     /**
-     * Splits HTTP header on the parameters.
+     * Creates a data model for the collection.
      *
-     * @param string    $headerLine     HTTP header line Set-Cookie.
+     * @param string    $headerLine     HTTP header line.
+     *
+     * @return Cookie
+     */
+    public function createCollectionItem($headerLine)
+    {
+        return new Cookie($this->getParams($headerLine));
+    }
+
+    /**
+     * Returns HTTP header parameters.
+     *
+     * @param string    $headerLine     HTTP header line.
      *
      * @return array
      */
-    private function getCookieParams($headerLine)
+    private function getParams($headerLine)
     {
         $cookieParamsStrings = explode(':', trim($headerLine), 2);
         $params = array();

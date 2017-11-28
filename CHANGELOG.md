@@ -1,5 +1,11 @@
 # Change Log
 
+## dev-master (2017-11-28)
+- Refactoring.
+- Added RawResponse class.
+- Added unitTest for class Brownie\HttpClient\HeadList.
+- Added unitTest for class Brownie\HttpClient\RawResponse.
+
 ## dev-master (2017-11-03)
 - Refactoring.
 

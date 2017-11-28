@@ -7,10 +7,9 @@
 
 namespace Brownie\HttpClient\Client;
 
-use Brownie\HttpClient\Cookie\Cookie;
 use Brownie\HttpClient\Cookie\CookieList;
-use Brownie\HttpClient\Header\Header;
 use Brownie\HttpClient\Header\HeaderList;
+use Brownie\HttpClient\RawResponse;
 use Brownie\HttpClient\Request;
 use Brownie\HttpClient\Response;
 use Brownie\HttpClient\Client;
@@ -75,11 +74,28 @@ class CurlAdapter implements Client
      */
     public function httpRequest(Request $request)
     {
-        $curl = $this->getCurlClient($request);
-
+        $rawResponse = $this->request($request);
         /**
-         * Executes a network resource request.
+         * Gets the HTTP headers and the body separately.
          */
+        $body = substr($rawResponse->getResponseBody(), $rawResponse->getHeaderSize());
+        $httpHeadersString = substr($rawResponse->getResponseBody(), 0, $rawResponse->getHeaderSize());
+
+        $response = new Response();
+        return $response
+            ->setBody($body)
+            ->setHttpCode($rawResponse->getHttpCode())
+            ->setRuntime($rawResponse->getRuntime())
+            ->setHttpHeaderList(new HeaderList($httpHeadersString))
+            ->setHttpCookieList(new CookieList($httpHeadersString));
+    }
+
+    /**
+     * Executes a network resource request.
+     */
+    private function request($request)
+    {
+        $curl = $this->getCurlClient($request);
         $responseBody = $this->getAdaptee()->exec($curl);
 
         /**
@@ -95,19 +111,14 @@ class CurlAdapter implements Client
 
         $this->getAdaptee()->close($curl);
 
-        /**
-         * Gets the HTTP headers and the body separately.
-         */
-        $body = substr($responseBody, $headerSize);
-        $httpHeadersString = substr($responseBody, 0, $headerSize);
-
-        $response = new Response();
-        return $response
-            ->setBody($body)
-            ->setHttpCode($httpCode)
-            ->setRuntime($runtime)
-            ->setHttpHeaderList(new HeaderList($httpHeadersString))
-            ->setHttpCookieList(new CookieList($httpHeadersString));
+        return new RawResponse(
+            array(
+                'runtime' => $runtime,
+                'httpCode' => $httpCode,
+                'headerSize' => $headerSize,
+                'responseBody' => $responseBody
+            )
+        );
     }
 
     /**
@@ -119,27 +130,10 @@ class CurlAdapter implements Client
      */
     private function getCurlClient(Request $request)
     {
-
-        /**
-         * Build URL.
-         */
         $url = $this->getUrl($request);
-
-        /**
-         * Initializing CURL.
-         */
         $curl = $this->getAdaptee()->init($url);
-
-        /**
-         * CURL setting.
-         */
         $this->setBaseOpt($curl, $request, $url);
-
-        /**
-         * Configuring HTTP headers.
-         */
         $this->setHedaers($curl, $request);
-
         return $curl;
     }
 
@@ -174,6 +168,21 @@ class CurlAdapter implements Client
      */
     private function setBaseOpt($curl, Request $request, $url)
     {
+        $this->setDefaultOpt($curl, $request, $url);
+        $this->triggerEnablePostParams($curl, $request);
+        $this->triggerDisableSSLCertificateValidation($curl, $request);
+        $this->triggerAuthentication($curl, $request);
+    }
+
+    /**
+     * Sets the default values.
+     *
+     * @param resource  $curl       CURL resource.
+     * @param Request   $request    HTTP request params.
+     * @param string    $url        Request URL.
+     */
+    private function setDefaultOpt($curl, Request $request, $url)
+    {
         $this
             ->getAdaptee()
             ->setopt($curl, CURLOPT_CUSTOMREQUEST, $request->getMethod())
@@ -182,7 +191,16 @@ class CurlAdapter implements Client
             ->setopt($curl, CURLOPT_RETURNTRANSFER, true)
             ->setopt($curl, CURLOPT_URL, $url)
             ->setopt($curl, CURLOPT_HEADER, true);
+    }
 
+    /**
+     * Configures POST data.
+     *
+     * @param resource  $curl       CURL resource.
+     * @param Request   $request    HTTP request params.
+     */
+    private function triggerEnablePostParams($curl, Request $request)
+    {
         if ($this->isPostParams($request)) {
             $this
                 ->getAdaptee()
@@ -193,14 +211,9 @@ class CurlAdapter implements Client
                 $request->setBody($params);
             }
         }
-
         $this
             ->getAdaptee()
             ->setopt($curl, CURLOPT_POSTFIELDS, $request->getBody());
-
-        $this->triggerDisableSSLCertificateValidation($curl, $request);
-
-        $this->triggerAuthentication($curl, $request);
     }
 
     /**

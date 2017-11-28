@@ -16,40 +16,42 @@ class HeaderList extends HeadList
 {
 
     /**
-     * Initializing the headers container.
+     * Returns the HTTP header skip flag.
+     *
+     * @param string    $headerLine     HTTP header line.
+     *
+     * @return bool
      */
-    protected function initList()
+    protected function isSkipHeaderLine($headerLine)
     {
-        $headerList = array();
-        foreach (explode("\r\n", trim($this->getInitData())) as $headerLine) {
-            if (empty($headerLine)) {
-                $headerList = array();
-                continue;
-            }
-            if ($this->isHeaderHTTP($headerLine) || $this->isHeaderSetCookie($headerLine)) {
-                continue;
-            }
-            $headerParams = $this->getHeaderParams($headerLine);
-            $headerList[strtolower($headerParams['name'])] = new Header($headerParams);
-        }
-        $this->setList($headerList);
+        return ($this->isHeaderHTTP($headerLine) || $this->isHeaderSetCookie($headerLine));
     }
 
     /**
-     * Splits Cookie HTTP header on the parameters.
+     * Creates a data model for the collection.
+     *
+     * @param string    $headerLine     HTTP header line.
+     *
+     * @return Header
+     */
+    public function createCollectionItem($headerLine)
+    {
+        return new Header($this->getParams($headerLine));
+    }
+
+    /**
+     * Returns HTTP header parameters.
      *
      * @param string    $headerLine     HTTP header line.
      *
      * @return array
      */
-    private function getHeaderParams($headerLine)
+    private function getParams($headerLine)
     {
         $pairParam = explode(':', trim($headerLine), 2);
-        $name = trim($pairParam[0]);
-        $value = trim($pairParam[1]);
         return array(
-            'name' => $name,
-            'value' => $value
+            'name' => trim($pairParam[0]),
+            'value' => trim($pairParam[1])
         );
     }
 }
