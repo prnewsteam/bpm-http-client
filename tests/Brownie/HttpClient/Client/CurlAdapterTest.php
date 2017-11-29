@@ -90,6 +90,19 @@ class CurlAdapterTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(5.5, $response->getRuntime());
     }
 
+    public function testHttpRequestNoParams()
+    {
+        $this->curlAdapter = new CurlAdapter($this->createCurlAdaptee(0));
+
+        $request = $this->createRequest('http://localhost/endpoint', false, false, 'GET', false);
+
+        $response = $this->curlAdapter->httpRequest($request);
+
+        $this->assertEquals('Simple text', $response->getBody());
+        $this->assertEquals(200, $response->getHttpCode());
+        $this->assertEquals(5.5, $response->getRuntime());
+    }
+
     public function testHttpRequestOkCheckSSLAuthentication()
     {
         $this->curlAdapter = new CurlAdapter($this->createCurlAdaptee(0, true));
@@ -116,7 +129,7 @@ class CurlAdapterTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(5.5, $response->getRuntime());
     }
 
-    private function createRequest($url, $disableSSLValidation = false, $addBody = true, $method = 'GET')
+    private function createRequest($url, $disableSSLValidation = false, $addBody = true, $method = 'GET', $addParams = true)
     {
         $request = $this
             ->prophesize('Brownie\HttpClient\Request');
@@ -129,6 +142,16 @@ class CurlAdapterTest extends \PHPUnit_Framework_TestCase
         $request
             ->addMethodProphecy(
                 $methodSetBody->willReturn(null)
+            );
+
+        $methodSetUrl = new MethodProphecy(
+            $request,
+            'setUrl',
+            array('http://localhost/endpoint?page=5555')
+        );
+        $request
+            ->addMethodProphecy(
+                $methodSetUrl->willReturn(null)
             );
 
         $methodGetMethod = new MethodProphecy(
@@ -214,9 +237,9 @@ class CurlAdapterTest extends \PHPUnit_Framework_TestCase
 
         $request
             ->addMethodProphecy(
-                $methodGetParams->willReturn(array(
+                $methodGetParams->willReturn($addParams ? array(
                     'page' => 5555
-                ))
+                ) : array())
             );
 
         $request

@@ -92,18 +92,17 @@ class CurlAdapter implements Client
 
     /**
      * Executes a network resource request.
+     *
+     * @param Request       $request    HTTP request params.
+     *
+     * @return RawResponse
      */
-    private function request($request)
+    private function request(Request $request)
     {
-        $curl = $this->getCurlClient($request);
-        $responseBody = $this->getAdaptee()->exec($curl);
+        $this->initParams($request);
 
-        /**
-         * Network error checking.
-         */
-        if ((0 != $this->getAdaptee()->errno($curl)) || !is_string($responseBody)) {
-            throw new ClientException($this->getAdaptee()->error($curl));
-        }
+        $curl = $this->getCurlClient($request);
+        $responseBody = $this->curlExec($curl);
 
         $runtime = $this->getAdaptee()->getinfo($curl, CURLINFO_TOTAL_TIME);
         $httpCode = $this->getAdaptee()->getinfo($curl, CURLINFO_HTTP_CODE);
@@ -122,6 +121,25 @@ class CurlAdapter implements Client
     }
 
     /**
+     * Perform a request session.
+     * Returns the body of the response
+     *
+     * @param resource      $curl       Curl client.
+     *
+     * @return string
+     *
+     * @throws ClientException
+     */
+    private function curlExec($curl)
+    {
+        $responseBody = $this->getAdaptee()->exec($curl);
+        if ((0 != $this->getAdaptee()->errno($curl)) || !is_string($responseBody)) {
+            throw new ClientException($this->getAdaptee()->error($curl));
+        }
+        return $responseBody;
+    }
+
+    /**
      * Creates and returns a CURL resource.
      *
      * @param Request       $request        HTTP request params.
@@ -130,33 +148,10 @@ class CurlAdapter implements Client
      */
     private function getCurlClient(Request $request)
     {
-        $url = $this->getUrl($request);
-        $curl = $this->getAdaptee()->init($url);
-        $this->setBaseOpt($curl, $request, $url);
+        $curl = $this->getAdaptee()->init($request->getUrl());
+        $this->setBaseOpt($curl, $request);
         $this->setHedaers($curl, $request);
         return $curl;
-    }
-
-    /**
-     * Generates and returns URL.
-     *
-     * @param Request   $request    HTTP request params.
-     *
-     * @return string
-     */
-    private function getUrl(Request $request)
-    {
-        $url = $request->getUrl();
-
-        /**
-         * Adds GET parameters.
-         */
-        $params = $request->getParams();
-        if ((Request::HTTP_METHOD_GET == $request->getMethod()) && !empty($params)) {
-            $url .= '?' . http_build_query($params);
-        }
-
-        return $url;
     }
 
     /**
@@ -164,14 +159,16 @@ class CurlAdapter implements Client
      *
      * @param resource  $curl       CURL resource.
      * @param Request   $request    HTTP request params.
-     * @param string    $url        Request URL.
      */
-    private function setBaseOpt($curl, Request $request, $url)
+    private function setBaseOpt($curl, Request $request)
     {
-        $this->setDefaultOpt($curl, $request, $url);
+        $this->setDefaultOpt($curl, $request);
         $this->triggerEnablePostParams($curl, $request);
         $this->triggerDisableSSLCertificateValidation($curl, $request);
         $this->triggerAuthentication($curl, $request);
+        $this
+            ->getAdaptee()
+            ->setopt($curl, CURLOPT_POSTFIELDS, $request->getBody());
     }
 
     /**
@@ -179,9 +176,8 @@ class CurlAdapter implements Client
      *
      * @param resource  $curl       CURL resource.
      * @param Request   $request    HTTP request params.
-     * @param string    $url        Request URL.
      */
-    private function setDefaultOpt($curl, Request $request, $url)
+    private function setDefaultOpt($curl, Request $request)
     {
         $this
             ->getAdaptee()
@@ -189,7 +185,7 @@ class CurlAdapter implements Client
             ->setopt($curl, CURLOPT_TIMEOUT, $request->getTimeOut())
             ->setopt($curl, CURLOPT_NOPROGRESS, true)
             ->setopt($curl, CURLOPT_RETURNTRANSFER, true)
-            ->setopt($curl, CURLOPT_URL, $url)
+            ->setopt($curl, CURLOPT_URL, $request->getUrl())
             ->setopt($curl, CURLOPT_HEADER, true);
     }
 
@@ -201,29 +197,21 @@ class CurlAdapter implements Client
      */
     private function triggerEnablePostParams($curl, Request $request)
     {
-        if ($this->isPostParams($request)) {
+        if ($this->isPostOrPutRequest($request)) {
             $this
                 ->getAdaptee()
                 ->setopt($curl, CURLOPT_POST, true);
-            $params = $request->getParams();
-            if (!empty($params)) {
-                $params = http_build_query($params);
-                $request->setBody($params);
-            }
         }
-        $this
-            ->getAdaptee()
-            ->setopt($curl, CURLOPT_POSTFIELDS, $request->getBody());
     }
 
     /**
-     * Returns the POST character of the data.
+     * Returns the POST or PUT request flag.
      *
      * @param Request   $request    HTTP request params.
      *
      * @return bool
      */
-    private function isPostParams(Request $request)
+    private function isPostOrPutRequest(Request $request)
     {
         return (Request::HTTP_METHOD_POST == $request->getMethod()) ||
             (Request::HTTP_METHOD_PUT == $request->getMethod());
@@ -277,21 +265,13 @@ class CurlAdapter implements Client
     private function setHedaers($curl, Request $request)
     {
         /**
-         * Sets the basic set of HTTP headers.
+         * Sets HTTP headers.
          */
         $headers = $this->createBaseHeaderList($request);
-        if (!$this->isPostParams($request)) {
+        if (!$this->isPostOrPutRequest($request)) {
             $headers[] = 'Content-Type: ' . $request->getBodyFormat() . '; charset=utf-8';
         }
-
-        /**
-         * Sets a custom set of HTTP headers.
-         */
         $headers = array_merge($headers, $this->createCustomHeaderList($request));
-
-        /**
-         * Sets the HTTP cookie.
-         */
         $headers = array_merge($headers, $this->createCookieHeaderList($request));
 
         $this->getAdaptee()->setopt($curl, CURLOPT_HTTPHEADER, $headers);
@@ -349,5 +329,30 @@ class CurlAdapter implements Client
             $headers[] = 'Cookie: ' . implode('; ', $cookies);
         }
         return $headers;
+    }
+
+    /**
+     * Initializing query parameters.
+     *
+     * @param Request   $request    HTTP request params.
+     */
+    private function initParams(Request $request)
+    {
+        $params = $request->getParams();
+        if (empty($params)) {
+            return;
+        }
+        $paramsURLEncoded = http_build_query($params);
+        if ($this->isPostOrPutRequest($request)) {
+            /**
+             * Adds body parameters.
+             */
+            $request->setBody($paramsURLEncoded);
+        } else {
+            /**
+             * Adds url parameters.
+             */
+            $request->setUrl($request->getUrl() . '?' . $paramsURLEncoded);
+        }
     }
 }

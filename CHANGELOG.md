@@ -1,5 +1,8 @@
 # Change Log
 
+## dev-master (2017-11-29)
+- Refactoring.
+
 ## dev-master (2017-11-28)
 - Refactoring.
 - Added RawResponse class.
