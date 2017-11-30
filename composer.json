@@ -15,7 +15,7 @@
     "require": {
         "php": ">=5.3",
         "ext-curl": "*",
-        "ossbrownie/util": "dev-master"
+        "ossbrownie/util": "~0.0.1"
     },
     "require-dev": {
         "phpunit/phpunit": "4.8.35",
