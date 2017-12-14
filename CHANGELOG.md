@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.0.2 (2017-12-14)
+- Updating libraries.
+
 ## 0.0.1 (2017-11-30)
 - Release 0.0.1
 

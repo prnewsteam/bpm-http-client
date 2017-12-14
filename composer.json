@@ -5,7 +5,7 @@
     "type": "library",
     "keywords": ["brownie", "http-client", "httpclient", "http", "client", "curl", "receiving responses", "request", "response"],
     "homepage": "https://github.com/ossbrownie/http-client",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "authors": [
         {
             "name": "brownie",
@@ -15,7 +15,7 @@
     "require": {
         "php": ">=5.3",
         "ext-curl": "*",
-        "ossbrownie/util": "~0.0.1"
+        "ossbrownie/util": "~0.0.3"
     },
     "require-dev": {
         "phpunit/phpunit": "4.8.35",

@@ -15,67 +15,39 @@ A simple HTTP client for sending HTTP requests and receiving responses.
 ## curl
 A basic CURL wrapper for PHP (see [http://php.net/curl](http://php.net/curl) for more information about the libcurl extension for PHP)
 
+
 ## Requirements
 - **PHP** >= 5.3
 - **EXT-CURL** = *
-- **"ossbrownie/util"** = ~0.0.1
+- **"ossbrownie/util"** = ~0.0.3
 
-## Usage
-```php
-$httpClient = new HttpClient(
-    new CurlAdapter(new CurlAdaptee())
-);
 
-$header = new Header();
-$header
-    ->setName('test1')
-    ->setValue('Simple1');
+## Installation
+Add a line to your "require" section in your composer configuration:
 
-$cookie = new Cookie();
-$cookie
-    ->setName('cookieName1')
-    ->setValue('cookieValue1');
-
-$request = new Request();
-$request
-    ->setMethod(Request::HTTP_METHOD_GET)
-    ->setUrl('https://api.github.com/emojis')
-    ->setBody('{"Hello":"World"}')
-    ->addParam('page', '5555')
-    ->setBodyFormat(Request::FORMAT_APPLICATION_JSON)
-    ->setTimeOut(100)
-    ->disableSSLValidation()
-    ->setAuthentication('tester', '123')
-    ->addHeader(new Header(array(
-        'name' => 'test2',
-        'value' => 'Simple2'
-    )))
-    ->addHeader($header)
-    ->addCookie(new Cookie(array(
-        'name' => 'cookieName2',
-        'value' => 'cookieValue2',
-    )))
-    ->addCookie($cookie);
-
-$response = $httpClient->request($request);
-
-echo 'HTTP Code: ' . $response->getHttpCode() . PHP_EOL;
-echo 'Response header "Content-Type": ' .
-    var_export(
-        $response->getHttpHeaderList()->get('Content-Type')->getValue(),
-        true
-    ) .
-    PHP_EOL;
-echo 'Response cookie "test3": ' .
-    var_export(
-        $response->getHttpCookieList()->get('test3')->getValue(),
-        true
-    ) .
-    PHP_EOL;
-echo 'Request runtime: ' . $response->getRuntime() . PHP_EOL;
-echo 'Response body: ' . $response->getBody() . PHP_EOL;
+```json
+{
+    "require": {
+        "ossbrownie/http-client": "0.0.2"
+    }
+}
 ```
 
-## Contact
+## Documentation
+- [Usage](https://github.com/ossbrownie/http-client/wiki/Usage) - Example of using the HttpClient
 
+
+## Tests
+To run the test suite, you need install the dependencies via composer, then run PHPUnit.
+```bash
+$> composer.phar install
+$> ./vendor/bin/phpunit --colors=always --bootstrap ./tests/bootstrap.php ./tests
+```
+
+
+## License
+HttpClient is licensed under the [GNU General Public License v3.0](http://www.gnu.org/copyleft/lesser.html)
+
+
+## Contact
 Problems, comments, and suggestions all welcome: [oss.brownie@gmail.com](mailto:oss.brownie@gmail.com)
