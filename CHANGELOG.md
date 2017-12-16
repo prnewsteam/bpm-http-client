@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.0.3 (2017-12-16)
+- Added "Code Intelligence Status" badge.
+- Updating libraries.
+
 ## 0.0.2 (2017-12-14)
 - Updating libraries.
 
