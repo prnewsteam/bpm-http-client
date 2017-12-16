@@ -77,7 +77,7 @@ class CurlAdapterTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('ERR', $response->getBody());
     }
 
-    public function testHttpRequestNoBody()
+    public function testHttpRequestNoBody1()
     {
         $this->curlAdapter = new CurlAdapter($this->createCurlAdaptee(0));
 
@@ -86,6 +86,19 @@ class CurlAdapterTest extends \PHPUnit_Framework_TestCase
         $response = $this->curlAdapter->httpRequest($request);
 
         $this->assertEquals('Simple text', $response->getBody());
+        $this->assertEquals(200, $response->getHttpCode());
+        $this->assertEquals(5.5, $response->getRuntime());
+    }
+
+    public function testHttpRequestNoBody2()
+    {
+        $this->curlAdapter = new CurlAdapter($this->createCurlAdaptee(0, false, true));
+
+        $request = $this->createRequest('http://localhost/endpoint', false, false);
+
+        $response = $this->curlAdapter->httpRequest($request);
+
+        $this->assertEmpty($response->getBody());
         $this->assertEquals(200, $response->getHttpCode());
         $this->assertEquals(5.5, $response->getRuntime());
     }
@@ -338,7 +351,7 @@ class CurlAdapterTest extends \PHPUnit_Framework_TestCase
         return $request->reveal();
     }
 
-    private function createCurlAdaptee($curlErrno, $authentication = false)
+    private function createCurlAdaptee($curlErrno, $authentication = false, $noBody = false)
     {
         $curlAdaptee = $this
             ->prophesize('Brownie\HttpClient\Client\CurlAdaptee');
@@ -620,10 +633,17 @@ class CurlAdapterTest extends \PHPUnit_Framework_TestCase
                     $methodExec->willReturn("HTTP/1.1 401 OK\r\nHeader401: OK\r\n\r\n\r\nHTTP/1.1 200 OK\r\nTestHeader: OK\r\n\r\nSimple text")
                 );
         } else {
-            $curlAdaptee
-                ->addMethodProphecy(
-                    $methodExec->willReturn("HTTP/1.1 200 OK\r\nTestHeader: OK\r\n\r\nSimple text")
-                );
+            if ($noBody) {
+                $curlAdaptee
+                    ->addMethodProphecy(
+                        $methodExec->willReturn("HTTP/1.1 200 OK\r\nTestHeader: OK\r\n\r\n")
+                    );
+            } else {
+                $curlAdaptee
+                    ->addMethodProphecy(
+                        $methodExec->willReturn("HTTP/1.1 200 OK\r\nTestHeader: OK\r\n\r\nSimple text")
+                    );
+            }
         }
 
         $methodGetinfo_HTTP_CODE = new MethodProphecy(

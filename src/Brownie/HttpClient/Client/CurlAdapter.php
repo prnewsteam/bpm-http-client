@@ -79,6 +79,9 @@ class CurlAdapter implements Client
          * Gets the HTTP headers and the body separately.
          */
         $body = substr($rawResponse->getResponseBody(), $rawResponse->getHeaderSize());
+        if (empty($body)) {
+            $body = '';
+        }
         $httpHeadersString = substr($rawResponse->getResponseBody(), 0, $rawResponse->getHeaderSize());
 
         $response = new Response();
