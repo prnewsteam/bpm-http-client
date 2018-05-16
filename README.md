@@ -20,7 +20,7 @@ A basic CURL wrapper for PHP (see [http://php.net/curl](http://php.net/curl) for
 ## Requirements
 - **PHP** >= 5.3
 - **EXT-CURL** = *
-- **"ossbrownie/util"** = ~0.0.4
+- **"ossbrownie/util"** = ~0.0.5
 
 
 ## Installation
@@ -29,7 +29,7 @@ Add a line to your "require" section in your composer configuration:
 ```json
 {
     "require": {
-        "ossbrownie/http-client": "0.0.3"
+        "ossbrownie/http-client": "0.0.4"
     }
 }
 ```

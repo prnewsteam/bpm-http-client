@@ -1,11 +1,11 @@
 {
     "name": "ossbrownie/http-client",
     "description": "A simple HTTP client for sending HTTP requests and receiving responses based on CURL.",
-    "license": "LGPLv3",
+    "license": "MIT",
     "type": "library",
     "keywords": ["brownie", "http-client", "httpclient", "http", "client", "curl", "receiving responses", "request", "response"],
     "homepage": "https://github.com/ossbrownie/http-client",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "authors": [
         {
             "name": "brownie",
@@ -15,7 +15,7 @@
     "require": {
         "php": ">=5.3",
         "ext-curl": "*",
-        "ossbrownie/util": "~0.0.4"
+        "ossbrownie/util": "~0.0.5"
     },
     "require-dev": {
         "phpunit/phpunit": "4.8.35",
