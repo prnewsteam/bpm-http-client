@@ -2,7 +2,7 @@
 /**
  * @category    Brownie/HttpClient
  * @author      Brownie <oss.brownie@gmail.com>
- * @license     http://www.gnu.org/copyleft/lesser.html
+ * @license     https://opensource.org/licenses/MIT
  */
 
 namespace Brownie\HttpClient\Cookie;

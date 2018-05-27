@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.0.4 (2018-05-27)
+- Change license.
+
 ## 0.0.3 (2017-12-16)
 - Added "Code Intelligence Status" badge.
 - Updating libraries.
