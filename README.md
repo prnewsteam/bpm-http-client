@@ -11,7 +11,7 @@ HttpClient
 [![Code Intelligence Status](https://scrutinizer-ci.com/g/ossbrownie/http-client/badges/code-intelligence.svg?b=master)](https://scrutinizer-ci.com/code-intelligence)
 [![Build Status](https://travis-ci.org/ossbrownie/http-client.svg?branch=master)](https://travis-ci.org/ossbrownie/http-client)
 
-[![PHP Version](https://img.shields.io/badge/PHP-%3E%3D5.3-brightgreen.svg)](https://php.net/)
+[![PHP Version](https://img.shields.io/badge/PHP-%3E%3D5.5-brightgreen.svg)](https://php.net/)
 
 A simple HTTP client for sending HTTP requests and receiving responses.
 
@@ -20,7 +20,7 @@ A basic CURL wrapper for PHP (see [http://php.net/curl](http://php.net/curl) for
 
 
 ## Requirements
-- **PHP** >= 5.3
+- **PHP** >= 5.5
 - **EXT-CURL** = *
 - **"ossbrownie/util"** = ~0.0.5
 
