@@ -52,7 +52,7 @@ class CookieList extends HeadList
         $params = array();
         foreach (explode(';', trim($cookieParamsStrings[1])) as $index => $paramString) {
             $pairParam = explode('=', trim($paramString), 2);
-            $name = trim($pairParam[0]);
+            $name = strtolower(trim($pairParam[0]));
             $value = (!empty($pairParam[1]) ? trim($pairParam[1]) : true);
             if (0 == $index) {
                 $params['name'] = $name;

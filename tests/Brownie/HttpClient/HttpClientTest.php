@@ -199,4 +199,25 @@ class HttpClientTest extends \PHPUnit_Framework_TestCase
 
         return $request->reveal();
     }
+
+    public function testCreateRequest()
+    {
+        $this->assertInstanceOf('\Brownie\HttpClient\Request', $this->httpClient->createRequest());
+    }
+
+    public function testCreateCookie()
+    {
+        $cookie = $this->httpClient->createCookie('testName', 'testValue');
+        $this->assertInstanceOf('\Brownie\HttpClient\Cookie\Cookie', $cookie);
+        $this->assertEquals('testName', $cookie->getName());
+        $this->assertEquals('testValue', $cookie->getValue());
+    }
+
+    public function testCreateHeader()
+    {
+        $header = $this->httpClient->createHeader('testName', 'testValue');
+        $this->assertInstanceOf('\Brownie\HttpClient\Header\Header', $header);
+        $this->assertEquals('testName', $header->getName());
+        $this->assertEquals('testValue', $header->getValue());
+    }
 }

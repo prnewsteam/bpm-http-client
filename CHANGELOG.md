@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.0.5 (2019-03-12)
+- Updated composer.json, .travis.yml, .scrutinizer.yml, README.md.
+- Added HTTP Client method "createRequest".
+- Added HTTP Client method "createCookie".
+- Added HTTP Client method "createHeader".
+- Added unitTests.
+- Fixed a bug with the uppercase in the fields of the name of the cookies in the class Brownie/HttpClient/Cookie/CookieList.
+
 ## 0.0.4 (2018-05-27)
 - Change license.
 

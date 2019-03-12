@@ -4,8 +4,6 @@ matrix:
   include:
     - php: 5.3
       dist: precise
-  allow_failures:
-    - php: hhvm
 
 php:
   - 5.4
@@ -13,13 +11,14 @@ php:
   - 5.6
   - 7.0
   - 7.1
-  - hhvm
+  - 7.2
+  - 7.3
 
 before_script:
   - composer install --dev
 
 script:
-  - vendor/bin/phpunit --colors=always --bootstrap ./tests/bootstrap.php ./tests --coverage-clover build/logs/clover.xml
+  - vendor/bin/phpunit --bootstrap ./tests/bootstrap.php ./tests --coverage-clover build/logs/clover.xml
 
 after_script:
-  - php vendor/bin/coveralls -v
+  - php vendor/bin/php-coveralls -v

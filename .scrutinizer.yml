@@ -1,8 +1,17 @@
 build:
+    nodes:
+        analysis:
+            project_setup:
+                override: true
+            tests:
+                override:
+                    - php-scrutinizer-run --enable-security-analysis
+                    - command: phpcs-run
+                      use_website_config: true
     tests:
         override:
             -
-                command: 'vendor/bin/phpunit --colors=always --bootstrap ./tests/bootstrap.php ./tests --coverage-clover build/logs/clover.xml'
+                command: 'vendor/bin/phpunit --bootstrap ./tests/bootstrap.php ./tests --coverage-clover build/logs/clover.xml'
                 coverage:
                     file: 'build/logs/clover.xml'
                     format: 'clover'
@@ -10,3 +19,7 @@ checks:
     php:
         code_rating: true
         duplication: true
+
+filter:
+    excluded_paths:
+        - "tests/"

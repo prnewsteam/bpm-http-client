@@ -7,6 +7,9 @@
 
 namespace Brownie\HttpClient;
 
+use Brownie\HttpClient\Cookie\Cookie;
+use Brownie\HttpClient\Header\Header;
+
 /**
  * HTTP client.
  * Target API for HTTP request.
@@ -38,11 +41,56 @@ class HttpClient
      * @param Request   $request    HTTP request params.
      *
      * @return Response
+     *
+     * @throws Exception\ClientException
+     * @throws Exception\ValidateException
      */
     public function request(Request $request)
     {
         $request->validate();
         return $this->getClient()->httpRequest($request);
+    }
+
+    /**
+     * Returns HTTP client request.
+     *
+     * @return Request
+     */
+    public function createRequest()
+    {
+        return new Request();
+    }
+
+    /**
+     * Returns HTTP cookie.
+     *
+     * @param string    $name       The name of the cookie.
+     * @param string    $value      The value of the cookie.
+     *
+     * @return Cookie
+     */
+    public function createCookie($name, $value)
+    {
+        return new Cookie(array(
+            'name' => $name,
+            'value' => $value
+        ));
+    }
+
+    /**
+     * Returns HTTP header.
+     *
+     * @param string    $name       Header name.
+     * @param string    $value      Header value.
+     *
+     * @return Header
+     */
+    public function createHeader($name, $value)
+    {
+        return new Header(array(
+            'name' => $name,
+            'value' => $value
+        ));
     }
 
     /**
