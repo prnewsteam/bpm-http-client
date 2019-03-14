@@ -5,7 +5,7 @@
     "type": "library",
     "keywords": ["brownie", "http-client", "httpclient", "http", "client", "curl", "receiving responses", "request", "response"],
     "homepage": "https://github.com/ossbrownie/http-client",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "authors": [
         {
             "name": "brownie",

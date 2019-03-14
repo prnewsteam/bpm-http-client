@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.0.6 (2019-03-14)
+- Added interfaces for ease of testing in new versions.
+
 ## 0.0.5 (2019-03-12)
 - Updated composer.json, .travis.yml, .scrutinizer.yml, README.md.
 - Added HTTP Client method "createRequest".

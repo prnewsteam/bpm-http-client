@@ -31,7 +31,7 @@ Add a line to your "require" section in your composer configuration:
 ```json
 {
     "require": {
-        "ossbrownie/http-client": "0.0.5"
+        "ossbrownie/http-client": "0.0.6"
     }
 }
 ```
