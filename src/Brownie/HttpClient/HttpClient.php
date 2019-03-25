@@ -8,6 +8,7 @@
 namespace Brownie\HttpClient;
 
 use Brownie\HttpClient\Cookie\Cookie;
+use Brownie\HttpClient\Exception\ClientException;
 use Brownie\HttpClient\Header\Header;
 
 /**
@@ -38,17 +39,33 @@ class HttpClient
      * Performs a network request.
      * Returns the response.
      *
-     * @param Request   $request    HTTP request params.
+     * @param Request   $request                HTTP request params.
+     * @param int       $attempts               Number of request retries.
+     * @param int[]     $successfulHttpCodes    Successful Http codes.
      *
      * @return Response
      *
-     * @throws Exception\ClientException
+     * @throws ClientException
      * @throws Exception\ValidateException
      */
-    public function request(Request $request)
+    public function request(Request $request, $attempts = 1, $successfulHttpCodes = [])
     {
         $request->validate();
-        return $this->getClient()->httpRequest($request);
+        $response = null;
+        while (1 <= $attempts) {
+            $response = $this->getClient()->httpRequest($request);
+            $attempts--;
+            if (empty($successfulHttpCodes) || in_array($response->getHttpCode(), $successfulHttpCodes) ) {
+                $attempts = 0;
+            }
+            if (0 < $attempts) {
+                usleep(1000000);
+            }
+        };
+        if (empty($response)) {
+            throw new ClientException('No requests for execution.');
+        }
+        return $response;
     }
 
     /**

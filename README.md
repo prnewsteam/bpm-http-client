@@ -31,7 +31,7 @@ Add a line to your "require" section in your composer configuration:
 ```json
 {
     "require": {
-        "ossbrownie/http-client": "0.0.6"
+        "ossbrownie/http-client": "0.0.7"
     }
 }
 ```
@@ -44,7 +44,7 @@ Add a line to your "require" section in your composer configuration:
 To run the test suite, you need install the dependencies via composer, then run PHPUnit.
 ```bash
 $> composer.phar install
-$> ./vendor/bin/phpunit --colors=always --bootstrap ./tests/bootstrap.php ./tests
+$> ./vendor/bin/phpunit --bootstrap ./tests/bootstrap.php ./tests
 ```
 
 

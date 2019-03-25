@@ -53,6 +53,49 @@ class HttpClientTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(5.5, $response->getRuntime());
     }
 
+    /**
+     * @expectedException \Brownie\HttpClient\Exception\ClientException
+     */
+    public function testRequestClientException()
+    {
+        $request = $this->createRequest('http://localhost/endpoint');
+
+        $methodHttpRequest = new MethodProphecy(
+            $this->curlAdapter,
+            'httpRequest',
+            array($request)
+        );
+
+        $response = $this->createResponse('Simple text', 200, 5.5);
+
+        $this->curlAdapter
+            ->addMethodProphecy(
+                $methodHttpRequest->willReturn($response)
+            );
+
+        $this->httpClient->request($request, 0);
+    }
+
+    public function testRequestInvalidHttpCode()
+    {
+        $request = $this->createRequest('http://localhost/endpoint');
+
+        $methodHttpRequest = new MethodProphecy(
+            $this->curlAdapter,
+            'httpRequest',
+            array($request)
+        );
+
+        $response = $this->createResponse('Simple text', 200, 5.5);
+
+        $this->curlAdapter
+            ->addMethodProphecy(
+                $methodHttpRequest->willReturn($response)
+            );
+
+        $this->httpClient->request($request, 2, [404]);
+    }
+
     private function createResponse($body, $httpCode, $runtime)
     {
         $response = $this

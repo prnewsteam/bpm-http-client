@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.0.7 (2019-03-22)
+- Added repeat requests in case of HTTP errors.
+
 ## 0.0.6 (2019-03-14)
 - Added interfaces for ease of testing in new versions.
 
