@@ -55,7 +55,7 @@ class HttpClient
         while (1 <= $attempts) {
             $response = $this->getClient()->httpRequest($request);
             $attempts--;
-            if (empty($successfulHttpCodes) || in_array($response->getHttpCode(), $successfulHttpCodes) ) {
+            if (empty($successfulHttpCodes) || in_array($response->getHttpCode(), $successfulHttpCodes)) {
                 $attempts = 0;
             }
             if (0 < $attempts) {
