@@ -45,7 +45,7 @@ class HeadList extends StorageList
      */
     protected function isHeaderSetCookie($headerLine)
     {
-        return ('Set-Cookie:' == substr($headerLine, 0, 11));
+        return ('set-cookie:' == substr(strtolower($headerLine), 0, 11));
     }
 
     /**
@@ -57,7 +57,7 @@ class HeadList extends StorageList
      */
     protected function isHeaderHTTP($headerLine)
     {
-        return ('HTTP/' == substr($headerLine, 0, 5));
+        return ('http/' == substr(strtolower($headerLine), 0, 5));
     }
 
     /**
